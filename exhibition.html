@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的展覽紀錄</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;700&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{--bg:#FAF7F5;--surface:#FFFFFF;--surface2:#F5EEE9;--border:#E8DDD6;--border2:#D9C9BF;--text:#2C1F1A;--text2:#7A6058;--text3:#B09A90;--accent:#C4826A;--accent2:#A8624C;--green:#7A9E7E;--green-bg:#EEF4EF;--blue:#7A8FA8;--blue-bg:#EEF2F7;--amber:#B8904A;--amber-bg:#FBF3E4;--purple:#9A7AAA;--purple-bg:#F3EEF7;--red:#B85050;--red-bg:#FAEAEA;--radius:10px;--radius-lg:16px;--shadow:0 2px 12px rgba(196,130,106,0.10),0 4px 24px rgba(0,0,0,0.06);--shadow-sm:0 1px 4px rgba(196,130,106,0.08)}
+[data-theme="dark"]{--bg:#1E1512;--surface:#2A1E19;--surface2:#352620;--border:#4A3028;--border2:#5E3E34;--text:#F5EDE8;--text2:#C4A090;--text3:#8A6858;--accent:#E0A088;--accent2:#C4826A;--green:#8EBF92;--green-bg:#1A2E1C;--blue:#90AACC;--blue-bg:#1A2030;--amber:#D4A860;--amber-bg:#2A2010;--purple:#B898CC;--purple-bg:#22183A;--red:#D47070;--red-bg:#2A1010}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s;letter-spacing:.01em}
+.app-wrap{max-width:1100px;margin:0 auto;padding:0 24px 60px}
+header{display:flex;align-items:center;justify-content:space-between;padding:28px 0 24px;border-bottom:1px solid var(--border);margin-bottom:28px;flex-wrap:wrap;gap:12px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:40px;height:40px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#F7F4EF;font-size:18px}
+.logo-text{font-family:'Noto Serif TC',serif;font-size:22px;font-weight:700;color:var(--text)}
+.logo-sub{font-size:12px;color:var(--text3);margin-top:1px}
+.header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn-icon{background:none;border:1px solid var(--border);border-radius:8px;width:36px;height:36px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s}
+.btn-icon:hover{background:var(--surface2);color:var(--text)}
+.btn-add{display:flex;align-items:center;gap:7px;padding:9px 18px;background:var(--accent);color:#F7F4EF;border:none;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500;font-family:inherit;transition:opacity .2s}
+.btn-add:hover{opacity:.88}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:24px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;text-align:center;box-shadow:var(--shadow-sm)}
+.stat .n{font-family:'Noto Serif TC',serif;font-size:24px;font-weight:700;color:var(--accent);line-height:1}
+.stat .l{font-size:11px;color:var(--text3);margin-top:5px}
+.tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--border)}
+.tab{padding:10px 24px;cursor:pointer;font-size:14px;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;background:none;border-left:none;border-right:none;border-top:none;font-family:inherit;transition:color .2s;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:500}
+.tab:hover:not(.active){color:var(--text)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center}
+.filters input,.filters select{font-size:13px;padding:8px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);height:36px;font-family:inherit;outline:none;transition:border .2s}
+.filters input:focus,.filters select:focus{border-color:var(--accent2)}
+.filters input{flex:1;min-width:140px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;position:relative;box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s}
+.card:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.card-img{width:100%;height:160px;object-fit:cover;display:block;background:var(--surface2)}
+.card-img-placeholder{width:100%;height:160px;background:var(--surface2);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:36px}
+.card-body{padding:16px 18px}
+.card-title{font-family:'Noto Serif TC',serif;font-size:16px;font-weight:700;margin-bottom:4px;padding-right:60px;color:var(--text);line-height:1.4}
+.card-sub{font-size:13px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.badge{display:inline-block;font-size:11px;padding:3px 9px;border-radius:99px;font-weight:500}
+.b-visited{background:var(--green-bg);color:var(--green)}
+.b-planned{background:var(--blue-bg);color:var(--blue)}
+.b-type{background:var(--amber-bg);color:var(--amber)}
+.b-tag{background:var(--purple-bg);color:var(--purple)}
+.meta-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+.meta-item{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text2)}
+.stars{color:#C8860A;font-size:14px;letter-spacing:-1px}
+.note-box{font-size:12px;color:var(--text2);margin-top:10px;border-top:1px solid var(--border);padding-top:10px;font-style:italic;line-height:1.6}
+.card-actions{position:absolute;top:10px;right:10px;display:flex;gap:4px;z-index:2}
+.icon-btn{background:rgba(255,255,255,0.9);border:1px solid var(--border);cursor:pointer;color:var(--text3);font-size:13px;padding:5px 7px;border-radius:7px;display:flex;align-items:center;transition:all .15s;backdrop-filter:blur(4px)}
+.icon-btn:hover{color:var(--text);background:var(--surface2);border-color:var(--border2)}
+.icon-btn.danger:hover{color:var(--red);border-color:var(--red-bg);background:var(--red-bg)}
+.empty{text-align:center;padding:48px 24px;color:var(--text3)}
+.empty i{font-size:36px;display:block;margin-bottom:12px;opacity:.5}
+.empty p{font-size:14px}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(22,19,15,.55);z-index:200;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-lg);padding:28px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;border:1px solid var(--border);box-shadow:0 8px 40px rgba(0,0,0,.18)}
+.modal h2{font-family:'Noto Serif TC',serif;font-size:20px;font-weight:700;margin-bottom:20px;color:var(--text)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:500;letter-spacing:.3px}
+.field input,.field select,.field textarea{width:100%;font-size:14px;padding:9px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;outline:none;transition:border .2s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent2)}
+.field textarea{height:80px;resize:vertical;line-height:1.6}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.star-sel{display:flex;gap:5px}
+.star-sel span{font-size:24px;cursor:pointer;color:var(--border2);transition:color .1s;line-height:1}
+.star-sel span.on{color:#C8860A}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.btn-cancel{padding:9px 18px;background:none;border:1px solid var(--border);border-radius:9px;cursor:pointer;font-size:14px;color:var(--text2);font-family:inherit;transition:all .15s}
+.btn-cancel:hover{background:var(--surface2);color:var(--text)}
+.btn-save{padding:9px 20px;background:var(--accent);color:#F7F4EF;border:none;border-radius:9px;cursor:pointer;font-size:14px;font-weight:500;font-family:inherit;transition:opacity .2s}
+.btn-save:hover{opacity:.88}
+.img-preview{width:100%;height:140px;object-fit:cover;border-radius:var(--radius);margin-top:8px;display:none;border:1px solid var(--border)}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--accent);color:#F7F4EF;padding:10px 24px;border-radius:99px;font-size:13px;opacity:0;transition:opacity .25s,transform .25s;z-index:999;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:600px){
+  .app-wrap{padding:0 14px 40px}
+  header{padding:18px 0 16px}
+  .logo-text{font-size:18px}
+  .row2,.row3{grid-template-columns:1fr}
+  .grid{grid-template-columns:1fr}
+  .tab{padding:10px 14px;font-size:13px}
+}
+</style>
+</head>
+<body>
+<div class="app-wrap">
+  <header>
+    <div class="logo">
+      <div class="logo-icon"><i class="fa-solid fa-image"></i></div>
+      <div>
+        <div class="logo-text">我的展覽紀錄</div>
+        <div class="logo-sub">展覽參觀與計畫管理</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-icon" onclick="toggleTheme()" id="theme-btn" title="切換主題"><i class="fa-solid fa-moon"></i></button>
+      <button class="btn-icon" onclick="exportData()" title="匯出備份"><i class="fa-solid fa-download"></i></button>
+      <label class="btn-icon" title="匯入備份" style="cursor:pointer"><i class="fa-solid fa-upload"></i><input type="file" accept=".json" onchange="importData(event)" style="display:none"></label>
+      <button class="btn-add" onclick="openModal()"><i class="fa-solid fa-plus"></i> 新增展覽</button>
+    </div>
+  </header>
+
+  <div class="stats-row" id="stats-row"></div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('all')"><i class="fa-solid fa-grip"></i> 全部</button>
+    <button class="tab" onclick="switchTab('visited')"><i class="fa-solid fa-check-circle"></i> 已參觀</button>
+    <button class="tab" onclick="switchTab('planned')"><i class="fa-solid fa-clock"></i> 預計參觀</button>
+  </div>
+
+  <div class="filters">
+    <input type="text" id="search" placeholder="搜尋展覽名稱、地點…" oninput="render()">
+    <select id="f-type" onchange="render()"><option value="">全部類型</option></select>
+    <select id="f-year" onchange="render()"><option value="">全部年份</option></select>
+    <select id="f-sort" onchange="render()">
+      <option value="newest">最新加入</option>
+      <option value="date-desc">日期（新→舊）</option>
+      <option value="date-asc">日期（舊→新）</option>
+      <option value="rating">評分高低</option>
+      <option value="price">票價高低</option>
+    </select>
+  </div>
+
+  <div class="grid" id="main-grid"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="main-modal">
+  <div class="modal">
+    <h2 id="modal-title">新增展覽</h2>
+
+    <div class="field"><label>展覽名稱 *</label><input id="f-name" type="text" placeholder="展覽名稱"></div>
+
+    <div class="row2">
+      <div class="field"><label>展覽類型</label>
+        <select id="f-type-in">
+          <option value="">未分類</option>
+          <option value="美術">美術</option>
+          <option value="攝影">攝影</option>
+          <option value="科技">科技</option>
+          <option value="歷史文化">歷史文化</option>
+          <option value="自然科學">自然科學</option>
+          <option value="設計">設計</option>
+          <option value="音樂表演">音樂表演</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+      <div class="field"><label>狀態</label>
+        <select id="f-status">
+          <option value="visited">已參觀</option>
+          <option value="planned">預計參觀</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field"><label>地點／場館</label><input id="f-venue" type="text" placeholder="例：台北市立美術館"></div>
+
+    <div class="row2">
+      <div class="field"><label>參觀日期</label><input id="f-date" type="date"></div>
+      <div class="field"><label>展覽結束日期</label><input id="f-end-date" type="date"></div>
+    </div>
+
+    <div class="row2">
+      <div class="field"><label>票價（NT$）</label><input id="f-price" type="number" min="0" placeholder="0（免費填0）"></div>
+      <div class="field"><label>同行者</label><input id="f-companions" type="text" placeholder="例：家人、朋友、獨自"></div>
+    </div>
+
+    <div class="field"><label>圖片連結（URL）</label>
+      <input id="f-img" type="url" placeholder="https://…" oninput="previewImg()">
+      <img id="img-preview" class="img-preview" alt="圖片預覽">
+    </div>
+
+    <div class="field"><label>標籤（逗號分隔）</label><input id="f-tags" type="text" placeholder="例：當代藝術,必看,親子"></div>
+
+    <div class="field"><label>評分</label>
+      <div class="star-sel" id="stars">
+        <span onclick="setRating(1)">★</span><span onclick="setRating(2)">★</span>
+        <span onclick="setRating(3)">★</span><span onclick="setRating(4)">★</span>
+        <span onclick="setRating(5)">★</span>
+      </div>
+    </div>
+
+    <div class="field"><label>心得筆記</label><textarea id="f-note" placeholder="參觀心得、印象深刻的作品…"></textarea></div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-save" onclick="saveExhibition()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let exhibitions = [];
+let curTab = 'all';
+let editId = null;
+let rating = 0;
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+function toggleTheme(){
+  const d=document.documentElement;
+  const isDark=d.getAttribute('data-theme')==='dark';
+  d.setAttribute('data-theme',isDark?'':'dark');
+  document.getElementById('theme-btn').innerHTML=isDark?'<i class="fa-solid fa-moon"></i>':'<i class="fa-solid fa-sun"></i>';
+  localStorage.setItem('exh-theme',isDark?'light':'dark');
+}
+(function(){
+  const t=localStorage.getItem('exh-theme')||'light';
+  if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');document.getElementById('theme-btn').innerHTML='<i class="fa-solid fa-sun"></i>';}
+})();
+
+function saveData(){
+  try{localStorage.setItem('exh-data',JSON.stringify(exhibitions));return true;}
+  catch(e){showToast('儲存失敗：'+e.message);return false;}
+}
+function loadData(){
+  try{const d=localStorage.getItem('exh-data');exhibitions=d?JSON.parse(d):[];}
+  catch(e){exhibitions=[];}
+  render();
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify({exhibitions,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`展覽備份_${new Date().toISOString().slice(0,10)}.json`;a.click();
+  URL.revokeObjectURL(url);showToast('備份已下載！');
+}
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(!d.exhibitions){showToast('檔案格式不正確');return;}
+      if(!confirm(`確定匯入 ${d.exhibitions.length} 筆展覽資料？\n會覆蓋現有資料`))return;
+      exhibitions=d.exhibitions;saveData();render();showToast('匯入成功！');
+    }catch(err){showToast('匯入失敗');}
+  };
+  reader.readAsText(file);e.target.value='';
+}
+
+function switchTab(t){
+  curTab=t;
+  document.querySelectorAll('.tab').forEach((el,i)=>{
+    const keys=['all','visited','planned'];
+    el.classList.toggle('active',keys[i]===t);
+  });
+  render();
+}
+
+function setRating(n){
+  rating=n;
+  document.querySelectorAll('#stars span').forEach((s,i)=>s.classList.toggle('on',i<n));
+}
+
+function previewImg(){
+  const url=document.getElementById('f-img').value.trim();
+  const preview=document.getElementById('img-preview');
+  if(url){preview.src=url;preview.style.display='block';preview.onerror=()=>preview.style.display='none';}
+  else{preview.style.display='none';}
+}
+
+function openModal(item){
+  editId=item?item.id:null;
+  document.getElementById('modal-title').textContent=item?'編輯展覽':'新增展覽';
+  document.getElementById('f-name').value=item?.name||'';
+  document.getElementById('f-type-in').value=item?.type||'';
+  document.getElementById('f-status').value=item?.status||'visited';
+  document.getElementById('f-venue').value=item?.venue||'';
+  document.getElementById('f-date').value=item?.date||'';
+  document.getElementById('f-end-date').value=item?.endDate||'';
+  document.getElementById('f-price').value=item?.price||'';
+  document.getElementById('f-companions').value=item?.companions||'';
+  document.getElementById('f-img').value=item?.img||'';
+  document.getElementById('f-tags').value=item?.tags?.join(',')||'';
+  document.getElementById('f-note').value=item?.note||'';
+  setRating(item?.rating||0);
+  previewImg();
+  document.getElementById('main-modal').classList.add('open');
+}
+function closeModal(){document.getElementById('main-modal').classList.remove('open');}
+
+function saveExhibition(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){showToast('請輸入展覽名稱');return;}
+  const ex={
+    id:editId||Date.now(),
+    name,
+    type:document.getElementById('f-type-in').value,
+    status:document.getElementById('f-status').value,
+    venue:document.getElementById('f-venue').value.trim(),
+    date:document.getElementById('f-date').value,
+    endDate:document.getElementById('f-end-date').value,
+    price:parseFloat(document.getElementById('f-price').value)||0,
+    companions:document.getElementById('f-companions').value.trim(),
+    img:document.getElementById('f-img').value.trim(),
+    tags:document.getElementById('f-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+    rating,
+    note:document.getElementById('f-note').value.trim()
+  };
+  exhibitions=editId?exhibitions.map(x=>x.id===editId?ex:x):[...exhibitions,ex];
+  if(saveData()){closeModal();showToast(editId?'已更新':'展覽已新增');render();}
+}
+
+function deleteExhibition(id){
+  if(!confirm('確定刪除這筆展覽紀錄？'))return;
+  exhibitions=exhibitions.filter(e=>e.id!==id);
+  saveData();showToast('已刪除');render();
+}
+
+function render(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const ftype=document.getElementById('f-type').value;
+  const fyear=document.getElementById('f-year').value;
+  const fsort=document.getElementById('f-sort').value;
+
+  // Build year dropdown
+  const years=[...new Set(exhibitions.map(e=>e.date?e.date.slice(0,4):null).filter(Boolean))].sort((a,b)=>b-a);
+  const ys=document.getElementById('f-year');const yv=ys.value;
+  ys.innerHTML='<option value="">全部年份</option>'+years.map(y=>`<option value="${y}"${y===yv?' selected':''}>${y} 年</option>`).join('');
+
+  // Update type dropdown
+  const types=[...new Set(exhibitions.map(e=>e.type).filter(Boolean))];
+  const ts=document.getElementById('f-type');const tv=ts.value;
+  ts.innerHTML='<option value="">全部類型</option>'+types.map(t=>`<option value="${t}"${t===tv?' selected':''}>${t}</option>`).join('');
+
+  // Stats
+  const visited=exhibitions.filter(e=>e.status==='visited');
+  const planned=exhibitions.filter(e=>e.status==='planned');
+  const totalSpend=visited.reduce((s,e)=>s+(e.price||0),0);
+  document.getElementById('stats-row').innerHTML=`
+    <div class="stat"><div class="n">${exhibitions.length}</div><div class="l">全部展覽</div></div>
+    <div class="stat"><div class="n">${visited.length}</div><div class="l">已參觀</div></div>
+    <div class="stat"><div class="n">${planned.length}</div><div class="l">預計參觀</div></div>
+    <div class="stat"><div class="n">NT$${totalSpend.toLocaleString()}</div><div class="l">總票價</div></div>`;
+
+  let list=exhibitions.filter(e=>{
+    const txt=(e.name+e.venue+e.tags.join(' ')).toLowerCase();
+    const tabOk=curTab==='all'||(curTab==='visited'&&e.status==='visited')||(curTab==='planned'&&e.status==='planned');
+    return tabOk&&(!q||txt.includes(q))&&(!ftype||e.type===ftype)&&(!fyear||e.date?.startsWith(fyear));
+  });
+
+  if(fsort==='date-desc')list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  else if(fsort==='date-asc')list.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  else if(fsort==='rating')list.sort((a,b)=>(b.rating||0)-(a.rating||0));
+  else if(fsort==='price')list.sort((a,b)=>(b.price||0)-(a.price||0));
+  else list.sort((a,b)=>b.id-a.id);
+
+  const grid=document.getElementById('main-grid');
+  if(!list.length){
+    grid.innerHTML='<div class="empty"><i class="fa-solid fa-image"></i><p>還沒有展覽紀錄，點右上角新增吧！</p></div>';
+    return;
+  }
+
+  grid.innerHTML=list.map(e=>{
+    const stars=e.rating?'<i class="fa-solid fa-star" style="color:#C8860A;font-size:12px"></i>'.repeat(e.rating)+'<i class="fa-regular fa-star" style="color:var(--border2);font-size:12px"></i>'.repeat(5-e.rating):'';
+    const isVisited=e.status==='visited';
+    return`<div class="card">
+      <div class="card-actions">
+        <button class="icon-btn" onclick='openModal(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(e))}")))' title="編輯"><i class="fa-solid fa-pen"></i></button>
+        <button class="icon-btn danger" onclick="deleteExhibition(${e.id})" title="刪除"><i class="fa-solid fa-trash"></i></button>
+      </div>
+      ${e.img
+        ?`<img class="card-img" src="${e.img}" alt="${e.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        :''}
+      ${!e.img?`<div class="card-img-placeholder"><i class="fa-solid fa-image"></i></div>`:`<div class="card-img-placeholder" style="display:none"><i class="fa-solid fa-image"></i></div>`}
+      <div class="card-body">
+        <div class="card-title">${e.name}</div>
+        <div class="card-sub">
+          ${e.venue?`<i class="fa-solid fa-location-dot" style="font-size:11px"></i> ${e.venue}`:''}
+        </div>
+        <div class="meta-row">
+          <span class="badge ${isVisited?'b-visited':'b-planned'}">${isVisited?'已參觀':'預計參觀'}</span>
+          ${e.type?`<span class="badge b-type">${e.type}</span>`:''}
+          ${e.tags.map(t=>`<span class="badge b-tag">${t}</span>`).join('')}
+        </div>
+        ${stars?`<div style="margin-top:8px;display:flex;gap:2px;align-items:center">${stars}</div>`:''}
+        <div class="meta-row">
+          ${e.date?`<span class="meta-item"><i class="fa-solid fa-calendar"></i> ${e.date}</span>`:''}
+          ${e.price!=null&&e.price>=0&&e.price!==''?`<span class="meta-item"><i class="fa-solid fa-ticket"></i> ${e.price===0?'免費':'NT$'+e.price.toLocaleString()}</span>`:''}
+          ${e.companions?`<span class="meta-item"><i class="fa-solid fa-user-group"></i> ${e.companions}</span>`:''}
+        </div>
+        ${e.note?`<div class="note-box">${e.note}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('main-modal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('main-modal'))closeModal();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+loadData();
+</script>
+</body>
+</html>
