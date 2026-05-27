@@ -175,8 +175,15 @@ header{display:flex;align-items:center;justify-content:space-between;padding:28p
       <div class="field"><label>同行者</label><input id="f-companions" type="text" placeholder="例：家人、朋友、獨自"></div>
     </div>
 
-    <div class="field"><label>圖片連結（URL）</label>
-      <input id="f-img" type="url" placeholder="https://…" oninput="previewImg()">
+    <div class="field">
+      <label>圖片連結（URL）</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="f-img" type="url" placeholder="https://i.imgur.com/…" oninput="previewImg()" style="flex:1">
+        <a href="https://imgur.com/upload" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--text2);text-decoration:none;white-space:nowrap;transition:all .15s" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--surface2)'">
+          <i class="fa-solid fa-arrow-up-from-bracket"></i> 上傳圖片
+        </a>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:5px">上傳到 Imgur 後，在圖片上按右鍵 → 「複製圖片網址」貼到上方欄位</div>
       <img id="img-preview" class="img-preview" alt="圖片預覽">
     </div>
 
