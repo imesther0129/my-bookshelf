@@ -133,6 +133,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:28p
     <button class="tab" onclick="switchTab('magazine')"><i class="fa-solid fa-newspaper"></i> 雜誌</button>
     <button class="tab" onclick="switchTab('indie')"><i class="fa-solid fa-pen-nib"></i> 非商業出版</button>
     <button class="tab" onclick="switchTab('manga')"><i class="fa-solid fa-book-bookmark"></i> 漫畫系列</button>
+    <button class="tab" onclick="switchTab('wishlist')"><i class="fa-solid fa-cart-shopping"></i> 預購清單</button>
   </div>
 
   <!-- General / Books / Magazine / Indie tabs share same template -->
@@ -141,6 +142,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:28p
   <div id="tab-magazine" style="display:none"></div>
   <div id="tab-indie" style="display:none"></div>
   <div id="tab-manga" style="display:none"></div>
+  <div id="tab-wishlist" style="display:none"></div>
 </div>
 
 <!-- Book Modal (for general/books/magazine/indie) -->
@@ -239,6 +241,33 @@ header{display:flex;align-items:center;justify-content:space-between;padding:28p
   </div>
 </div>
 
+<!-- Wishlist Modal -->
+<div class="modal-bg" id="wish-modal">
+  <div class="modal" style="max-width:440px">
+    <h2 id="wm-title">新增預購書籍</h2>
+    <div class="field"><label>書名 *</label><input id="wm-name" type="text" placeholder="書名"></div>
+    <div class="row2">
+      <div class="field"><label>作者</label><input id="wm-author" type="text" placeholder="作者"></div>
+      <div class="field"><label>出版社</label><input id="wm-pub" type="text" placeholder="出版社"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>預計價格（NT$）</label><input id="wm-price" type="number" min="0" placeholder="0"></div>
+      <div class="field"><label>購買優先度</label>
+        <select id="wm-priority">
+          <option value="high">⬆ 高</option>
+          <option value="mid" selected>➡ 中</option>
+          <option value="low">⬇ 低</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>備注</label><textarea id="wm-note" placeholder="在哪裡看到的、備注…" style="height:60px"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('wish-modal')">取消</button>
+      <button class="btn-save" onclick="saveWish()">儲存</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -250,9 +279,10 @@ const TABS = [
   {key:'indie',   label:'非商業出版',icon:'fa-pen-nib', store:'bkmgr-indie'},
 ];
 const MANGA_STORE = 'bkmgr-manga';
+const WISH_STORE = 'bkmgr-wishlist';
 
 // State
-let data = {general:[], books:[], magazine:[], indie:[], manga:[]};
+let data = {general:[], books:[], magazine:[], indie:[], manga:[], wishlist:[]};
 let curTab = 'general';
 let editBookId = null, editMangaId = null, volTargetId = null;
 let bRating = 0, mRating = 0, volRows = [];
@@ -282,6 +312,7 @@ function saveData(){
   try{
     TABS.forEach(tab=>localStorage.setItem(tab.store, JSON.stringify(data[tab.key])));
     localStorage.setItem(MANGA_STORE, JSON.stringify(data.manga));
+    localStorage.setItem(WISH_STORE, JSON.stringify(data.wishlist));
     return true;
   }catch(e){showToast('儲存失敗：'+e.message);return false;}
 }
@@ -293,6 +324,8 @@ function loadData(){
     });
     const m=localStorage.getItem(MANGA_STORE);
     data.manga=m?JSON.parse(m):[];
+    const w=localStorage.getItem(WISH_STORE);
+    data.wishlist=w?JSON.parse(w):[];
   }catch(e){TABS.forEach(t=>data[t.key]=[]); data.manga=[];}
   renderAll();
 }
@@ -316,6 +349,7 @@ function importData(e){
       if(!confirm(`確定要匯入？共 ${total} 筆資料\n\n注意：會覆蓋現有資料`))return;
       TABS.forEach(t=>data[t.key]=d[t.key]||[]);
       data.manga=d.manga||[];
+      data.wishlist=d.wishlist||[];
       saveData(); renderAll();
       showToast('匯入成功！');
     }catch(err){showToast('匯入失敗，請確認檔案格式');}
@@ -328,10 +362,10 @@ function importData(e){
 function switchTab(key){
   curTab=key;
   document.querySelectorAll('.tab').forEach((el,i)=>{
-    const keys=['general','books','magazine','indie','manga'];
+    const keys=['general','books','magazine','indie','manga','wishlist'];
     el.classList.toggle('active',keys[i]===key);
   });
-  ['general','books','magazine','indie','manga'].forEach(k=>{
+  ['general','books','magazine','indie','manga','wishlist'].forEach(k=>{
     document.getElementById('tab-'+k).style.display=k===key?'':'none';
   });
 }
@@ -340,6 +374,7 @@ function switchTab(key){
 function renderAll(){
   TABS.forEach(tab=>renderBookTab(tab.key));
   renderManga();
+  renderWishlist();
 }
 
 // Generic book tab renderer
@@ -439,6 +474,7 @@ function renderBookTab(key){
 // Modal helpers
 function openAddModal(){
   if(curTab==='manga') openMangaModal();
+  else if(curTab==='wishlist') openWishModal();
   else openBookModal(curTab, null);
 }
 function openBookModal(key, item){
@@ -643,6 +679,144 @@ function renderManga(){
     </div>`;
   }).join('');
 }
+
+// ===== WISHLIST =====
+let editWishId = null;
+
+function openWishModal(item){
+  editWishId=item?item.id:null;
+  document.getElementById('wm-title').textContent=item?'編輯預購書籍':'新增預購書籍';
+  document.getElementById('wm-name').value=item?.name||'';
+  document.getElementById('wm-author').value=item?.author||'';
+  document.getElementById('wm-pub').value=item?.pub||'';
+  document.getElementById('wm-price').value=item?.price||'';
+  document.getElementById('wm-priority').value=item?.priority||'mid';
+  document.getElementById('wm-note').value=item?.note||'';
+  document.getElementById('wish-modal').classList.add('open');
+}
+
+function saveWish(){
+  const name=document.getElementById('wm-name').value.trim();
+  if(!name){showToast('請輸入書名');return;}
+  const w={
+    id:editWishId||Date.now(),
+    name,
+    author:document.getElementById('wm-author').value.trim(),
+    pub:document.getElementById('wm-pub').value.trim(),
+    price:parseFloat(document.getElementById('wm-price').value)||0,
+    priority:document.getElementById('wm-priority').value,
+    note:document.getElementById('wm-note').value.trim(),
+    addedAt:editWishId?(data.wishlist.find(w=>w.id===editWishId)?.addedAt||Date.now()):Date.now()
+  };
+  data.wishlist=editWishId?data.wishlist.map(x=>x.id===editWishId?w:x):[...data.wishlist,w];
+  if(saveData()){closeModal('wish-modal');showToast(editWishId?'已更新':'已加入預購清單');renderWishlist();}
+}
+
+function deleteWish(id){
+  if(!confirm('確定刪除？'))return;
+  data.wishlist=data.wishlist.filter(w=>w.id!==id);
+  saveData();showToast('已刪除');renderWishlist();
+}
+
+function moveToBooks(id){
+  const w=data.wishlist.find(x=>x.id===id);
+  if(!w)return;
+  // Open book modal prefilled
+  openBookModal('general',{...w,id:null,status:'unread',cat:'',tags:[],date:'',rating:0});
+  // Remove from wishlist after save - we'll handle via a flag
+  pendingWishDelete=id;
+}
+
+let pendingWishDelete=null;
+const origSaveBook=saveBook;
+
+function renderWishlist(){
+  const container=document.getElementById('tab-wishlist');
+  if(!container.querySelector('.filters')){
+    container.innerHTML=`
+      <div class="stats-row" id="wishlist-stats"></div>
+      <div class="filters">
+        <input type="text" id="wish-search" placeholder="搜尋書名、作者…" oninput="renderWishlist()">
+        <select id="wish-priority" onchange="renderWishlist()">
+          <option value="">全部優先度</option>
+          <option value="high">⬆ 高優先</option>
+          <option value="mid">➡ 中優先</option>
+          <option value="low">⬇ 低優先</option>
+        </select>
+        <select id="wish-sort" onchange="renderWishlist()">
+          <option value="priority">優先度排序</option>
+          <option value="newest">最新加入</option>
+          <option value="price">價格高低</option>
+          <option value="title">書名</option>
+        </select>
+      </div>
+      <div class="grid" id="wishlist-grid"></div>`;
+  }
+
+  const q=document.getElementById('wish-search')?.value.toLowerCase()||'';
+  const fp=document.getElementById('wish-priority')?.value||'';
+  const fs=document.getElementById('wish-sort')?.value||'priority';
+
+  const pOrder={high:0,mid:1,low:2};
+  const pLabel={high:'高優先',mid:'中優先',low:'低優先'};
+  const pColor={high:'background:#FAEAEA;color:#B85050',mid:'background:#FBF3E4;color:#B8904A',low:'background:#EEF4EF;color:#7A9E7E'};
+
+  let list=data.wishlist.filter(w=>{
+    const txt=(w.name+w.author+w.pub).toLowerCase();
+    return(!q||txt.includes(q))&&(!fp||w.priority===fp);
+  });
+  if(fs==='priority')list.sort((a,b)=>pOrder[a.priority]-pOrder[b.priority]);
+  else if(fs==='price')list.sort((a,b)=>(b.price||0)-(a.price||0));
+  else if(fs==='title')list.sort((a,b)=>a.name.localeCompare(b.name,'zh'));
+  else list.sort((a,b)=>b.addedAt-a.addedAt);
+
+  const totalPrice=data.wishlist.reduce((s,w)=>s+(w.price||0),0);
+  document.getElementById('wishlist-stats').innerHTML=`
+    <div class="stat"><div class="n">${data.wishlist.length}</div><div class="l">預購書籍</div></div>
+    <div class="stat"><div class="n">${data.wishlist.filter(w=>w.priority==='high').length}</div><div class="l">高優先</div></div>
+    <div class="stat"><div class="n">${data.wishlist.filter(w=>w.priority==='mid').length}</div><div class="l">中優先</div></div>
+    <div class="stat"><div class="n">NT$${totalPrice.toLocaleString()}</div><div class="l">預計花費</div></div>`;
+
+  const grid=document.getElementById('wishlist-grid');
+  if(!list.length){grid.innerHTML='<div class="empty"><i class="fa-solid fa-cart-shopping"></i><p>預購清單是空的，點右上角新增吧！</p></div>';return;}
+  grid.innerHTML=list.map(w=>`
+    <div class="card">
+      <div class="card-actions">
+        <button class="icon-btn" onclick='openWishModal(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(w))}")))' title="編輯"><i class="fa-solid fa-pen"></i></button>
+        <button class="icon-btn danger" onclick="deleteWish(${w.id})" title="刪除"><i class="fa-solid fa-trash"></i></button>
+      </div>
+      <div class="card-title">${w.name}</div>
+      <div class="card-sub">${[w.author,w.pub].filter(Boolean).join(' · ')||'—'}</div>
+      <div class="meta-row">
+        <span class="badge" style="${pColor[w.priority]||''}">${pLabel[w.priority]||'中優先'}</span>
+        ${w.price?`<span style="font-size:12px;color:var(--text2)">預計 NT$${w.price.toLocaleString()}</span>`:''}
+      </div>
+      ${w.note?`<div class="note-box">${w.note}</div>`:''}
+      <button style="display:flex;align-items:center;gap:6px;margin-top:12px;width:100%;justify-content:center;padding:7px;border:1px solid var(--accent);background:none;color:var(--accent);border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s" onmouseover="this.style.background='var(--accent)';this.style.color='#FAF7F5'" onmouseout="this.style.background='none';this.style.color='var(--accent)'" onclick="markAsBought(${w.id})">
+        <i class="fa-solid fa-check"></i> 標記為已購買
+      </button>
+    </div>`).join('');
+}
+
+function markAsBought(id){
+  const w=data.wishlist.find(x=>x.id===id);
+  if(!w)return;
+  if(!confirm(`「${w.name}」已購買？
+會移到「一般書籍」並標記為未讀`))return;
+  const newBook={
+    id:Date.now(),name:w.name,author:w.author,pub:w.pub,
+    cat:'',tags:[],status:'unread',date:new Date().toISOString().slice(0,10),
+    price:w.price||0,rating:0,note:w.note||''
+  };
+  data['general']=[...data['general'],newBook];
+  data.wishlist=data.wishlist.filter(x=>x.id!==id);
+  saveData();showToast(`「${w.name}」已移到一般書籍！`);
+  renderWishlist();renderBookTab('general');
+}
+
+['wish-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id))closeModal(id);});
+});
 
 ['book-modal','manga-modal','vol-modal'].forEach(id=>{
   document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id))closeModal(id);});
