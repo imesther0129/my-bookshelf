@@ -52,7 +52,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:28p
 .b-finished{background:var(--green-bg);color:var(--green)}
 .meta-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
 .stars{color:#C8860A;font-size:14px;letter-spacing:-1px}
-.note-box{font-size:12px;color:var(--text2);margin-top:10px;border-top:1px solid var(--border);padding-top:10px;line-height:1.6}
+.note-box{font-size:12px;color:var(--text2);margin-top:10px;border-top:1px solid var(--border);padding-top:10px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
 .card-actions{position:absolute;top:14px;right:14px;display:flex;gap:4px}
 .icon-btn{background:none;border:1px solid var(--border);cursor:pointer;color:var(--text3);font-size:13px;padding:5px 7px;border-radius:7px;display:flex;align-items:center;transition:all .15s}
 .icon-btn:hover{color:var(--text);background:var(--surface2);border-color:var(--border2)}
@@ -237,6 +237,29 @@ header{display:flex;align-items:center;justify-content:space-between;padding:28p
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal('vol-modal')">取消</button>
       <button class="btn-save" onclick="saveVol()">新增</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bought Modal -->
+<div class="modal-bg" id="bought-modal">
+  <div class="modal" style="max-width:380px">
+    <h2>標記為已購買</h2>
+    <p id="bought-book-name" style="font-size:15px;font-weight:500;color:var(--accent);margin-bottom:16px"></p>
+    <div class="field"><label>加入哪個分類？</label>
+      <select id="bought-cat">
+        <option value="general">一般書籍</option>
+        <option value="books">圖書</option>
+        <option value="magazine">雜誌</option>
+        <option value="indie">非商業出版</option>
+      </select>
+    </div>
+    <div class="field"><label>購買日期</label>
+      <input id="bought-date" type="date">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('bought-modal')">取消</button>
+      <button class="btn-save" onclick="confirmBought()">確認移入</button>
     </div>
   </div>
 </div>
@@ -814,7 +837,7 @@ function markAsBought(id){
   renderWishlist();renderBookTab('general');
 }
 
-['wish-modal'].forEach(id=>{
+['wish-modal','bought-modal'].forEach(id=>{
   document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id))closeModal(id);});
 });
 
