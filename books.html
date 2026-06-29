@@ -821,20 +821,37 @@ function renderWishlist(){
     </div>`).join('');
 }
 
+let boughtWishId=null;
+
 function markAsBought(id){
   const w=data.wishlist.find(x=>x.id===id);
   if(!w)return;
-  if(!confirm(`「${w.name}」已購買？
-會移到「一般書籍」並標記為未讀`))return;
+  boughtWishId=id;
+  document.getElementById('bought-book-name').textContent=`「${w.name}」`;
+  document.getElementById('bought-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('bought-cat').value='general';
+  document.getElementById('bought-modal').classList.add('open');
+}
+
+function confirmBought(){
+  const w=data.wishlist.find(x=>x.id===boughtWishId);
+  if(!w)return;
+  const cat=document.getElementById('bought-cat').value;
+  const date=document.getElementById('bought-date').value||new Date().toISOString().slice(0,10);
+  const catLabel=document.getElementById('bought-cat').options[document.getElementById('bought-cat').selectedIndex].text;
   const newBook={
     id:Date.now(),name:w.name,author:w.author,pub:w.pub,
-    cat:'',tags:[],status:'unread',date:new Date().toISOString().slice(0,10),
+    cat:'',tags:[],status:'unread',date,
     price:w.price||0,rating:0,note:w.note||''
   };
-  data['general']=[...data['general'],newBook];
-  data.wishlist=data.wishlist.filter(x=>x.id!==id);
-  saveData();showToast(`「${w.name}」已移到一般書籍！`);
-  renderWishlist();renderBookTab('general');
+  data[cat]=[...data[cat],newBook];
+  data.wishlist=data.wishlist.filter(x=>x.id!==boughtWishId);
+  saveData();
+  closeModal('bought-modal');
+  showToast(`「${w.name}」已移到${catLabel}！`);
+  renderWishlist();
+  renderBookTab(cat);
+  boughtWishId=null;
 }
 
 ['wish-modal','bought-modal'].forEach(id=>{
